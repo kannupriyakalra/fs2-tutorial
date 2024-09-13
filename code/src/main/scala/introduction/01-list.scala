@@ -11,18 +11,19 @@ object StreamAsList {
   // Construction. We focus on creating Streams
 
   // The empty stream produces no values
-  val empty: Stream[Pure, Int] = ???
+  val empty: Stream[Pure, Int] = Stream.empty
 
   // This Stream should produce 1, 2, and 3, in that order
-  val naturals: Stream[Pure, Int] = ???
+  val naturals: Stream[Pure, Int] = Stream(1, 2, 3)
 
   // This method accepts a single value and returns the Stream that produces
   // that single value
-  def one[A](value: A): Stream[Pure, A] = ???
+  def one[A](value: A): Stream[Pure, A] = Stream(value)
 
   // This method accepts a list of values and returns the Stream that produces
   // exactly those values in the order given.
-  def list[A](values: List[A]): Stream[Pure, A] = ???
+  //def list[A](values: List[A]): Stream[Pure, A] = Stream.emits(values)
+  def list[A](values: List[A]): Stream[Pure, A] = Stream(values*) //2nd solution is by using splat operator
 
   // Transformation. We focus on transforming existing Streams
 
