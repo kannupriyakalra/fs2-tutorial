@@ -1,8 +1,11 @@
-# Streams as Effects over Time
+# Effects over Time
 
 In the [previous section](list.md) we approached `Stream` as a fancy `List`. 
-In this section we'll develop a much more useful model for understanding `Stream`: as effects over time.
+In this section we'll develop a more useful model for understanding `Stream`: as effects over time. 
 Let's look at this in two parts, considering first values over time and then effects.
+
+We highly recommend the [Aquascape][aquascape] site as a companion for this section.
+It has graphical descriptions of the methods we'll encounter.
 
 
 ## Values in Time and Space
@@ -12,6 +15,35 @@ Each value inside a `List` lives somewhere in the computer's memory, and they ar
 
 A `Stream`, however, can represent values arranged in *time*. At any point in time a `Stream` may produce additional values. This can model, for example, data arriving from the network or disk, or user input. The corollary of data arranged over time is that at some point in time there may be no data. This could be because no data has yet arrived, or because we've processed all the data that has arrived and we're waiting for more (which may or may not arrive).
 
+See the [Aquascape section for time][aquascape-time] for a detailed description of available methods that deal with time.
+
+@:callout(info)
+
+#### Type Inference and Temporal Instances
+
+The methods that manipulate time have an `implicit` parameter / `using` clause that looks for an instance of a type class `Temporal`. This will often fail to find an instance if you call these methods on a `Pure` `Stream`. When this happens you see an error message like
+
+```
+No given instance of type cats.effect.kernel.Temporal[[x] =>> fs2.Pure[x]] 
+was found for a context parameter of method metered in class Stream.
+... lots more stuff here ...
+```
+The solution is to simply specify the type parameter to give type inference the help it needs. That is, instead of writing, say,
+
+```scala
+Stream(1, 2, 3).metered(1.second)
+```
+
+you should write
+
+```scala mdoc:silent
+import fs2.*
+import cats.effect.*
+import scala.concurrent.duration.*
+
+Stream(1, 2, 3).metered[IO](1.second)
+```
+@:@
 
 ## Effects
 
@@ -43,9 +75,6 @@ which is a `Stream` of effects of type `F` that produce values of type `A`.
 In our previous examples we have converted `Stream` into `List`. This only works because our `Streams` are `Pure`. If they have some other effect type the method is not callable.
 
 ```scala
-import fs2.*
-import cats.effect.*
-
 val effect: Stream[IO, Int] = Stream(1, 2, 3)
 effect.toList
 // -- [E008] Not Found Error: -----------------------------------------------------
@@ -59,9 +88,6 @@ effect.toList
 To run an effectful `Stream` we must first convert it into some runnable effect type, and when we do so we must specify what we want to do with all the values in the `Stream`. Here's what is possibly the simplest example.
 
 ```scala mdoc:invisible
-import fs2.*
-import cats.effect.*
-
 val effect: Stream[IO, Int] = Stream(1, 2, 3)
 ```
 ```scala
@@ -132,4 +158,21 @@ Stream(1, 2, 3).evalMap(a => IO.println(a).as(a)).compile.drain.unsafeRunSync()
 ```
 @:@
 
+
+@:exercise(Time for Time)
+Create a `Stream` that emits a value once every second. You can emit any values you like (a few numbers is a good choice).
+@:@
+
+@:solution
+In the solution below I use `metered` to emit a value every second. Of the available combinators I think this is the best choice, but you could reasonably use other combinators, such as `spaced`, for this task. The semantics are slightly different, but the description of the task is not precise enough to require a particular choice of combinator. 
+
+I used `evalMap` to add the effect of printing the values so that I can see they are indeed emitted over time.
+
+```scala mdoc:silent
+Stream(1, 2, 3).metered[IO](1.second).evalMap(IO.println)
+```
+@:@
+
 [cats-effect-tutorial]: https://creativescala.org/cats-effect-tutorial
+[aquascape]: https://zainab-ali.github.io/aquascape/
+[aquascape-time]: https://zainab-ali.github.io/aquascape/reference/time.html

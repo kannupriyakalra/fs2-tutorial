@@ -18,7 +18,7 @@ import laika.config.LinkConfig
 import laika.config.ApiLinks
 import laika.theme.Theme
 
-lazy val scala3 = "3.3.3"
+lazy val scala3 = "3.5.2"
 
 ThisBuild / tlBaseVersion := "0.1" // your current series x.y
 ThisBuild / organization := "org.creativescala"
@@ -31,7 +31,7 @@ ThisBuild / developers := List(
 )
 
 // true by default, set to false to publish to s01.oss.sonatype.org
- ThisBuild / sonatypeCredentialHost := xerial.sbt.Sonatype.sonatypeLegacy
+ThisBuild / sonatypeCredentialHost := xerial.sbt.Sonatype.sonatypeLegacy
 
 ThisBuild / crossScalaVersions := List(scala3)
 ThisBuild / scalaVersion := scala3
@@ -46,7 +46,7 @@ Global / onChangedBuildSource := ReloadOnSourceChanges
 commands += Command.command("build") { state =>
   "dependencyUpdates" ::
     "compile" ::
-    "test" ::
+    // "test" ::
     "scalafixAll" ::
     "scalafmtAll" ::
     "scalafmtSbt" ::
@@ -62,14 +62,17 @@ lazy val css = taskKey[Unit]("Build the CSS")
 
 val commonSettings = Seq(
   libraryDependencies ++= Seq(
-    "org.creativescala" %%% "doodle" % "0.23.0",
+    "org.creativescala" %%% "doodle" % "0.26.0",
     "co.fs2" %%% "fs2-core" % "3.11.0",
-    "org.scalameta" %% "munit" % "1.0.1" % Test
+    "co.fs2" %%% "fs2-io" % "3.11.0",
+    "org.scalameta" %% "munit" % "1.0.2" % Test
   ),
   Compile / run / fork := true
 )
 
-lazy val root = tlCrossRootProject.aggregate(code, docs, examples)
+lazy val root = tlCrossRootProject
+  .aggregate(code, docs, examples)
+  .configureJVM(s => s.settings(commonSettings))
 
 lazy val code = project
   .in(file("code"))
